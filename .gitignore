@@ -1,0 +1,9 @@
+CMakeCache.txt*
+CMakeFiles/
+CTest*.cmake
+Makefile
+Testing/
+all_tests
+cmake_install.cmake
+gtest/
+latin1-to-utf8
