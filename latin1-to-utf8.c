@@ -9,7 +9,7 @@
 #define a_tilde     0xe3
 #define c_cedilla   0xe7
 
-static const uint8_t *beginText;
+static const uint8_t *beginMark;
 static const uint8_t *endText;
 
 static bool          inText;
@@ -21,15 +21,27 @@ static uint8_t       u8Esc;
  * 00 .. 7f    CC
  * 80 .. bf    0xC2 CC
  * c0 .. ff    0xC3 (CC ^ 0x40)
+ *
+ * The conversion can be shown by the script:
+ *
+#!/bin/bash
+
+for ((i = 0; $i < 256; i++)); do
+    n=$(printf "%02x" $i)
+    u8=$(eval "echo -ne '\x$n'" | recode l1..u8/x)
+    echo "$n -> $u8"
+    let i=$i+1
+done
+ *
  */
-void beginTranslate (const char *_beginText, const char *_endText) {
-    if (_beginText != NULL) {
+void beginTranslate (const char *_beginMark, const char *_endText) {
+    if (_beginMark != NULL) {
         inText = false;
-        cursor = (beginText = (const uint8_t *) _beginText);
+        cursor = (beginMark = (const uint8_t *) _beginMark);
         endText = (const uint8_t *) _endText;
     } else {
         inText = true;
-        cursor = beginText = endText = NULL;
+        cursor = beginMark = endText = NULL;
     }
     u8Esc = 0;
 }
@@ -81,7 +93,7 @@ size_t translate(const uint8_t *input, size_t inputLen, uint8_t * const output) 
                 if (c == *cursor) {
                     if (*++cursor == '\0') {
                         inText = false;
-                        cursor = beginText;
+                        cursor = beginMark;
                     }
                 } else if (cursor > endText) {
                     cursor = endText;
@@ -99,7 +111,7 @@ size_t translate(const uint8_t *input, size_t inputLen, uint8_t * const output) 
                         cursor = endText;
                     }
                 } else {
-                    cursor = beginText;
+                    cursor = beginMark;
                     if (c == *cursor) {
                         cursor++;
                     }
@@ -107,14 +119,14 @@ size_t translate(const uint8_t *input, size_t inputLen, uint8_t * const output) 
             }
         }
     }
-    return (out - output);
+    return (size_t) (out - output);
 }
 
-size_t endTranslate(uint8_t *const output) {
+size_t endTranslate(uint8_t *output) {
     uint8_t *out = output;
     if (u8Esc) {
         *out++ = ESC2;
         *out++ = u8Esc ^ 0x40;
     }
-    return out - output;
+    return (size_t) (out - output);
 }
