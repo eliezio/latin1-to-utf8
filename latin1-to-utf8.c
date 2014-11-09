@@ -3,13 +3,25 @@
 #include <stdbool.h>
 #include <ctype.h>
 
+#define ESC1    0xc2
+#define ESC2    0xc3
+
+#define a_tilde     0xe3
+#define c_cedilla   0xe7
+
 static const uint8_t *beginText;
 static const uint8_t *endText;
 
-static bool  inText;
+static bool          inText;
 static const uint8_t *cursor;
-static bool  c3;
+static uint8_t       u8Esc;
 
+/*
+ * General rule to convert from character 'CC' encoded in Latin1 to UTF8:
+ * 00 .. 7f    CC
+ * 80 .. bf    0xC2 CC
+ * c0 .. ff    0xC3 (CC ^ 0x40)
+ */
 void beginTranslate (const char *_beginText, const char *_endText) {
     if (_beginText != NULL) {
         inText = false;
@@ -19,7 +31,7 @@ void beginTranslate (const char *_beginText, const char *_endText) {
         inText = true;
         cursor = beginText = endText = NULL;
     }
-    c3 = false;
+    u8Esc = 0;
 }
 
 size_t translate(const uint8_t *input, size_t inputLen, uint8_t * const output) {
@@ -27,35 +39,43 @@ size_t translate(const uint8_t *input, size_t inputLen, uint8_t * const output) 
     for (; inputLen > 0; inputLen--) {
         uint8_t c = *input++;
         if (inText) {
-            if (! c3) {
-                if (c == 0xc3) {
-                    c3 = true;
+            if (! u8Esc) {
+                if ((c == ESC1) || (c == ESC2)) {
+                    u8Esc = c;
                 } else if (c < 0x80) {
                     *out++ = c;
-                // Caso especial: /\BFsr/...
-                } else if (c == 0xbf) {
-                    *out++ = 'u';
                 } else if (c < 0xc0) {
-                    *out++ = 0xc2;
+                    *out++ = ESC1;
                     *out++ = c;
                 } else {
-                    *out++ = 0xc3;
+                    *out++ = ESC2;
                     *out++ = c ^ 0x40;
                 }
-            // Caso especial: fun\C3\C3o
-            } else if (c == 0xc3) {
-                *out++ = 0xc3;
-                *out++ = 0xa7;
-                *out++ = 0xc3;
-                *out++ = 0xa3;
-                c3 = false;
             } else {
-                *out++ = 0xc3;
-                if (isascii(c)) {
-                    *out++ = 0xc3 ^ 0x40;
+                if (c < 0x80) {
+                    *out++ = ESC2;
+                    *out++ = u8Esc ^ 0x40;
+                    *out++ = c;
+                } else if (c < 0xc0) {
+                    *out++ = u8Esc;
+                    *out++ = c;
+                } else {
+                    uint8_t c1;
+                    uint8_t c2;
+                    // An abnormal case with an unknown cause
+                    if ((u8Esc == ESC2) && (c == ESC2)) {
+                        c1 = c_cedilla;
+                        c2 = a_tilde;
+                    } else {
+                        c1 = u8Esc;
+                        c2 = c;
+                    }
+                    *out++ = ESC2;
+                    *out++ = c1 ^ 0x40;
+                    *out++ = ESC2;
+                    *out++ = c2 ^ 0x40;
                 }
-                *out++ = c;
-                c3 = false;
+                u8Esc = 0;
             }
             if (cursor != NULL) {
                 if (c == *cursor) {
@@ -92,9 +112,9 @@ size_t translate(const uint8_t *input, size_t inputLen, uint8_t * const output) 
 
 size_t endTranslate(uint8_t *const output) {
     uint8_t *out = output;
-    if (c3) {
-        *out++ = 0xc3;
-        *out++ = 0xc3 ^ 0x40;
+    if (u8Esc) {
+        *out++ = ESC2;
+        *out++ = u8Esc ^ 0x40;
     }
-    return out - output;;
+    return out - output;
 }
