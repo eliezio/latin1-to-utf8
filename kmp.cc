@@ -22,85 +22,56 @@
 
 #include "kmp.h"
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
-class KmpPattern {
-public:
-    KmpPattern(const uint8_t *pattern, size_t psize) {
-        this->pattern = pattern;
-        this->psize = psize;
-        this->pi = compute_pattern(pattern, psize);
-        reset();
-    }
+static int * compute_pattern(const uint8_t *pattern, size_t psize);
 
-    ~KmpPattern() {
-        delete [] pi;
-    }
-
-    void reset() {
-        k = -1;
-    }
-
-    bool match(uint8_t c) {
-        while ((k > -1) && (pattern[k+1] != c))
-            k = pi[k];
-        if (c == pattern[k+1])
-            k++;
-        return (k == psize - 1);
-    }
-
-private:
-    static int * compute_pattern(const uint8_t *pattern, size_t psize) {
-        int k = -1;
-        int *pi = new int[sizeof(int) * psize];
-        pi[0] = k;
-        for (int i = 1; i < psize; i++) {
-            while ((k > -1) && (pattern[k+1] != pattern[i]))
-                k = pi[k];
-            if (pattern[i] == pattern[k+1])
-                k++;
-            pi[i] = k;
-        }
-        return pi;
-    }
-
-    int *   pi;
-    const uint8_t *pattern;
-    size_t  psize;
-    int     k;
-};
-
-static int *compute_prefix_function(const char *pattern, int psize)
-{
-	int k = -1;
-	int i = 1;
-	int *pi = (int *) malloc(sizeof(int)*(size_t) psize);
-	if (!pi)
-		return NULL;
-
-	pi[0] = k;
-	for (i = 1; i < psize; i++) {
-		while (k > -1 && pattern[k+1] != pattern[i])
-			k = pi[k];
-		if (pattern[i] == pattern[k+1])
-			k++;
-		pi[i] = k;
-	}
-	return pi;
+KmpSearch::KmpSearch(const uint8_t *pattern, size_t psize) {
+    this->pattern = pattern;
+    this->psize = psize;
+    this->pi = compute_pattern(pattern, psize);
+    reset();
 }
 
-int kmp(const char *target, const char *pattern)
-{
+KmpSearch::~KmpSearch() {
+    delete [] pi;
+}
+
+void KmpSearch::reset() {
+    k = -1;
+}
+
+bool KmpSearch::match(uint8_t c) {
+    while ((k > -1) && (c != pattern[k+1]))
+        k = pi[k];
+    if (c == pattern[k+1])
+        k++;
+    return (k == psize - 1);
+}
+
+int kmp(const char *target, const char *pattern) {
     const size_t tsize = strlen(target);
     const size_t psize = strlen(pattern);
 
-    KmpPattern kmpPattern = KmpPattern((const uint8_t *) pattern, psize);
-	for (int i = 0; i < tsize; i++) {
-        if (kmpPattern.match((uint8_t) target[i])) {
-            return i - psize + 1;
+    KmpSearch kmpSearch = KmpSearch((const uint8_t *) pattern, psize);
+    for (int i = 0; i < tsize; i++) {
+        if (kmpSearch.match((uint8_t) target[i])) {
+            return (int) (i - psize + 1);
         }
-	}
-	return -1;
+    }
+    return -1;
+}
+
+static int * compute_pattern(const uint8_t *pattern, size_t psize) {
+    int k = -1;
+    int *pi = new int[sizeof(int) * psize];
+    pi[0] = k;
+    for (int i = 1; i < psize; i++) {
+        while ((k > -1) && (pattern[k+1] != pattern[i]))
+            k = pi[k];
+        if (pattern[i] == pattern[k+1])
+            k++;
+        pi[i] = k;
+    }
+    return pi;
 }
