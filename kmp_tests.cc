@@ -2,8 +2,6 @@
 
 #include "kmp.h"
 
-#include <string.h>
-
 TEST(KmpTest, WikiExample)
 {
     const char *target = "ABC ABCDAB ABCDABCDABDE";

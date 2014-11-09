@@ -1,7 +1,6 @@
 #include "latin1-to-utf8.h"
 
 #include <stdbool.h>
-#include <ctype.h>
 
 #define ESC1    0xc2
 #define ESC2    0xc3
@@ -27,9 +26,9 @@ static uint8_t       u8Esc;
 #!/bin/bash
 
 for ((i = 0; $i < 256; i++)); do
-    n=$(printf "%02x" $i)
+    n=$(printf "%02X" $i)
     u8=$(eval "echo -ne '\x$n'" | recode l1..u8/x)
-    echo "$n -> $u8"
+    echo "0x$n -> $u8"
     let i=$i+1
 done
  *
@@ -61,12 +60,12 @@ size_t translate(const uint8_t *input, size_t inputLen, uint8_t * const output) 
                     *out++ = c;
                 } else {
                     *out++ = ESC2;
-                    *out++ = c ^ 0x40;
+                    *out++ = (uint8_t) (c ^ 0x40);
                 }
             } else {
                 if (c < 0x80) {
                     *out++ = ESC2;
-                    *out++ = u8Esc ^ 0x40;
+                    *out++ = (uint8_t) (u8Esc ^ 0x40);
                     *out++ = c;
                 } else if (c < 0xc0) {
                     *out++ = u8Esc;
@@ -83,9 +82,9 @@ size_t translate(const uint8_t *input, size_t inputLen, uint8_t * const output) 
                         c2 = c;
                     }
                     *out++ = ESC2;
-                    *out++ = c1 ^ 0x40;
+                    *out++ = (uint8_t) (c1 ^ 0x40);
                     *out++ = ESC2;
-                    *out++ = c2 ^ 0x40;
+                    *out++ = (uint8_t) (c2 ^ 0x40);
                 }
                 u8Esc = 0;
             }
@@ -126,7 +125,7 @@ size_t endTranslate(uint8_t *output) {
     uint8_t *out = output;
     if (u8Esc) {
         *out++ = ESC2;
-        *out++ = u8Esc ^ 0x40;
+        *out++ = (uint8_t) (u8Esc ^ 0x40);
     }
     return (size_t) (out - output);
 }
