@@ -46,7 +46,7 @@ bool KmpSearch::match(uint8_t c) {
         k = pi[k];
     if (c == pattern[k+1])
         k++;
-    return (k == psize - 1);
+    return (k == (int) (psize - 1));
 }
 
 int kmp(const char *target, const char *pattern) {
@@ -54,7 +54,7 @@ int kmp(const char *target, const char *pattern) {
     const size_t psize = strlen(pattern);
 
     KmpSearch kmpSearch = KmpSearch((const uint8_t *) pattern, psize);
-    for (int i = 0; i < tsize; i++) {
+    for (int i = 0; i < (int) tsize; i++) {
         if (kmpSearch.match((uint8_t) target[i])) {
             return (int) (i - psize + 1);
         }
@@ -66,7 +66,7 @@ static int * compute_pattern(const uint8_t *pattern, size_t psize) {
     int k = -1;
     int *pi = new int[sizeof(int) * psize];
     pi[0] = k;
-    for (int i = 1; i < psize; i++) {
+    for (int i = 1; i < (int) psize; i++) {
         while ((k > -1) && (pattern[k+1] != pattern[i]))
             k = pi[k];
         if (pattern[i] == pattern[k+1])
