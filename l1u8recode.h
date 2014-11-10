@@ -12,6 +12,8 @@ public:
 
     L1U8Recode(const char *beginText, const char *endText);
 
+    L1U8Recode(const uint8_t *beginText, size_t beginTextLen, const uint8_t *endText, size_t endTextLen);
+
     ~L1U8Recode();
 
     void init();

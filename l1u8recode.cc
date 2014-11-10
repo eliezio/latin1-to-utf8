@@ -10,20 +10,20 @@
 #define c_cedilla   0xe7
 
 /*
- * General rule to convert from character 'CC' encoded in Latin1 to UTF8:
- * 00 .. 7f    CC
- * 80 .. bf    0xC2 CC
- * c0 .. ff    0xC3 (CC ^ 0x40)
+ * The general rules to recode character 'ZZ' from Latin1 to UTF8 are as follow:
  *
- * The conversion can be shown by the script:
+ * 00 .. 7f    ZZ
+ * 80 .. bf    0xC2 ZZ
+ * c0 .. ff    0xC3 (ZZ ^ 0x40)
+ *
+ * You can use the following script to see how all characters are converted:
  *
 #!/bin/bash
 
 for ((i = 0; $i < 256; i++)); do
     n=$(printf "%02X" $i)
-    u8=$(eval "echo -ne '\x$n'" | recode l1..u8/x)
+    u8=$(echo -ne "\x$n" | recode l1..u8/x)
     echo "0x$n -> $u8"
-    let i=$i+1
 done
  *
  */
@@ -31,11 +31,14 @@ done
 L1U8Recode::L1U8Recode() : L1U8Recode(nullptr, nullptr) {
 }
 
+L1U8Recode::L1U8Recode(const char *beginText, const char *endText) :
+        L1U8Recode((const uint8_t *) beginText, beginText ? strlen(beginText) : 0,
+                   (const uint8_t*) endText, endText ? strlen(endText) : 0) {
 }
 
-L1U8Recode::L1U8Recode(const char *beginText, const char *endText) {
-    kmpSearches[false] = beginText ? new KmpSearch((const uint8_t *) beginText, strlen(beginText)) : nullptr;
-    kmpSearches[true] = endText ? new KmpSearch((const uint8_t *) endText, strlen(endText)) : nullptr;
+L1U8Recode::L1U8Recode(uint8_t const *beginText, size_t beginTextLen, uint8_t const *endText, size_t endTextLen) {
+    kmpSearches[false] = beginText ? new KmpSearch(beginText, beginTextLen) : nullptr;
+    kmpSearches[true] = endText ? new KmpSearch(endText, endTextLen) : nullptr;
     init();
 }
 
@@ -45,8 +48,11 @@ L1U8Recode::~L1U8Recode() {
 }
 
 void L1U8Recode::init() {
-    if ((this->inText = kmpSearches[false] != nullptr)) {
+    if (kmpSearches[false]) {
         kmpSearches[false]->reset();
+        this->inText = false;
+    } else {
+        this->inText = true;
     }
     if (kmpSearches[true]) {
         kmpSearches[true]->reset();
@@ -82,7 +88,7 @@ size_t L1U8Recode::translate(const uint8_t *input, size_t inputLen, uint8_t *con
                 } else {
                     uint8_t c1;
                     uint8_t c2;
-                    // An abnormal case with an unknown cause
+                    // I found many of this weird case on my RCS files with no apparent cause
                     if ((u8Esc == ESC2) && (c == ESC2)) {
                         c1 = c_cedilla;
                         c2 = a_tilde;
