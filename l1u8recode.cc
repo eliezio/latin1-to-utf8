@@ -103,7 +103,9 @@ size_t L1U8Recode::translate(const uint8_t *input, size_t inputLen, uint8_t *con
         if (kmpSearches[inText]) {
             if (kmpSearches[inText]->match(c)) {
                 inText = ! inText;
-                kmpSearches[inText]->reset();
+                if (kmpSearches[inText]) {
+                    kmpSearches[inText]->reset();
+                }
             }
         }
     }
