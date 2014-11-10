@@ -7,5 +7,4 @@ Testing/
 cmake_install.cmake
 gtest/
 l1u8recode
-all_tests
-kmp_tests
+*_tests
