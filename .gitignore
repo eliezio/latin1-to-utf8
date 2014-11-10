@@ -6,6 +6,6 @@ Makefile
 Testing/
 cmake_install.cmake
 gtest/
-latin1-to-utf8
+l1u8recode
 all_tests
 kmp_tests

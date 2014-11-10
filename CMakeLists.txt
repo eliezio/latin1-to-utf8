@@ -1,12 +1,10 @@
 cmake_minimum_required(VERSION 2.8.4)
-project(latin1-to-utf8)
+project(l1u8recode)
 
-if(CMAKE_COMPILER_IS_GNUCC)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -W -Werror")
-elseif("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Weverything -Werror")
-endif()
-add_executable(latin1-to-utf8 main.c kmp.cc latin1-to-utf8.c)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -std=c++11")
+
+add_executable(l1u8recode main.cc kmp.cc l1u8recode.cc)
 
 enable_testing()
 

@@ -1,19 +1,13 @@
-#include "latin1-to-utf8.h"
+#include "l1u8recode.h"
 
 #include <stdbool.h>
+#include <string.h>
 
 #define ESC1    0xc2
 #define ESC2    0xc3
 
 #define a_tilde     0xe3
 #define c_cedilla   0xe7
-
-static const uint8_t *beginMark;
-static const uint8_t *endText;
-
-static bool          inText;
-static const uint8_t *cursor;
-static uint8_t       u8Esc;
 
 /*
  * General rule to convert from character 'CC' encoded in Latin1 to UTF8:
@@ -33,19 +27,33 @@ for ((i = 0; $i < 256; i++)); do
 done
  *
  */
-void beginTranslate (const char *_beginMark, const char *_endText) {
-    if (_beginMark != NULL) {
-        inText = false;
-        cursor = (beginMark = (const uint8_t *) _beginMark);
-        endText = (const uint8_t *) _endText;
-    } else {
-        inText = true;
-        cursor = beginMark = endText = NULL;
-    }
-    u8Esc = 0;
+
+L1U8Recode::L1U8Recode() {
+    L1U8Recode(nullptr, nullptr);
 }
 
-size_t translate(const uint8_t *input, size_t inputLen, uint8_t * const output) {
+L1U8Recode::L1U8Recode(const char *beginText, const char *endText) {
+    kmpSearches[false] = beginText ? new KmpSearch((const uint8_t *) beginText, strlen(beginText)) : nullptr;
+    kmpSearches[true] = endText ? new KmpSearch((const uint8_t *) endText, strlen(endText)) : nullptr;
+    init();
+}
+
+L1U8Recode::~L1U8Recode() {
+    delete kmpSearches[0];
+    delete kmpSearches[1];
+}
+
+void L1U8Recode::init() {
+    if ((this->inText = kmpSearches[false] != nullptr)) {
+        kmpSearches[false]->reset();
+    }
+    if (kmpSearches[true]) {
+        kmpSearches[true]->reset();
+    }
+    this->u8Esc = 0;
+}
+
+size_t L1U8Recode::translate(const uint8_t *input, size_t inputLen, uint8_t *const output) {
     uint8_t *out = output;
     for (; inputLen > 0; inputLen--) {
         uint8_t c = *input++;
@@ -88,40 +96,20 @@ size_t translate(const uint8_t *input, size_t inputLen, uint8_t * const output) 
                 }
                 u8Esc = 0;
             }
-            if (cursor != NULL) {
-                if (c == *cursor) {
-                    if (*++cursor == '\0') {
-                        inText = false;
-                        cursor = beginMark;
-                    }
-                } else if (cursor > endText) {
-                    cursor = endText;
-                    if (c == *cursor) {
-                        cursor++;
-                    }
-                }
-            }
         } else {
             *out++ = c;
-            if (cursor != NULL) {
-                if (c == *cursor) {
-                    if (*++cursor == '\0') {
-                        inText = true;
-                        cursor = endText;
-                    }
-                } else {
-                    cursor = beginMark;
-                    if (c == *cursor) {
-                        cursor++;
-                    }
-                }
+        }
+        if (kmpSearches[inText]) {
+            if (kmpSearches[inText]->match(c)) {
+                inText = ! inText;
+                kmpSearches[inText]->reset();
             }
         }
     }
     return (size_t) (out - output);
 }
 
-size_t endTranslate(uint8_t *output) {
+size_t L1U8Recode::finish(uint8_t *output) {
     uint8_t *out = output;
     if (u8Esc) {
         *out++ = ESC2;
