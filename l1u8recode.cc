@@ -28,8 +28,9 @@ done
  *
  */
 
-L1U8Recode::L1U8Recode() {
-    L1U8Recode(nullptr, nullptr);
+L1U8Recode::L1U8Recode() : L1U8Recode(nullptr, nullptr) {
+}
+
 }
 
 L1U8Recode::L1U8Recode(const char *beginText, const char *endText) {
