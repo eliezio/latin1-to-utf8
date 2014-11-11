@@ -34,7 +34,7 @@ TEST (L1U8Tests, latin1OnlyBeginEndDelimented) {
         0x72, 0x61, 0xc3, 0xa7, 0xc3, 0xa3, 0x6f, 0x0a, 0x45, 0x4e, 0x44, 0x0a, 0x63, 0x6f, 0x72, 0x61,  //ra....o.END.cora
         0xe7, 0xe3, 0x6f, 0x0a,                                                                          //..o.
     };
-    L1U8Recode l1U8Recode = L1U8Recode("\nBEGIN", "END\n");
+    L1U8Recode l1U8Recode = L1U8Recode("BEGIN\n", "\nEND");
     size_t outputLen = l1U8Recode.translate(inLatin1Only, sizeof(inLatin1Only), output);
     EXPECT_EQ(sizeof(expectedOutput), outputLen);
     EXPECT_EQ(0, memcmp(output, expectedOutput, outputLen));
@@ -46,7 +46,7 @@ TEST (L1U8Tests, latin1OnlyEndDelimited) {
         0x63, 0x6f, 0x72, 0x61, 0xc3, 0xa7, 0xc3, 0xa3, 0x6f, 0x0a, 0x45, 0x4e, 0x44, 0x0a, 0x63, 0x6f,  //cora....o.END.co
         0x72, 0x61, 0xe7, 0xe3, 0x6f, 0x0a,                                                              //ra..o.
     };
-    L1U8Recode l1U8Recode = L1U8Recode(nullptr, "END\n");
+    L1U8Recode l1U8Recode = L1U8Recode(nullptr, "\nEND");
     size_t outputLen = l1U8Recode.translate(inLatin1Only, sizeof(inLatin1Only), output);
     EXPECT_EQ(sizeof(expectedOutput), outputLen);
     EXPECT_EQ(0, memcmp(output, expectedOutput, outputLen));
@@ -58,7 +58,7 @@ TEST (L1U8Tests, mixedBeginEndDelimited) {
         0x72, 0x61, 0xc3, 0xa7, 0xc3, 0xa3, 0x6f, 0x0a, 0x63, 0x6f, 0x72, 0x61, 0xc3, 0xa7, 0xc3, 0xa3,  //ra....o.cora....
         0x6f, 0x0a, 0x45, 0x4e, 0x44, 0x0a, 0x63, 0x6f, 0x72, 0x61, 0xe7, 0xe3, 0x6f, 0x0a,              //o.END.cora..o.
     };
-    L1U8Recode l1U8Recode = L1U8Recode("\nBEGIN", "END\n");
+    L1U8Recode l1U8Recode = L1U8Recode("BEGIN\n", "\nEND");
     size_t outputLen = l1U8Recode.translate(inMixed, sizeof(inMixed), output);
     EXPECT_EQ(sizeof(expectedOutput), outputLen);
     EXPECT_EQ(0, memcmp(output, expectedOutput, outputLen));
@@ -79,7 +79,7 @@ TEST(L1U8Tests, twoSections) {
         0xc3, 0xa9, 0x66, 0x6c, 0xc3, 0xa9, 0x63, 0x68, 0x69, 0x72, 0x0d, 0x0a, 0x45, 0x4e, 0x44, 0x0d,  //..fl..chir..END.
         0x0a, 0x66, 0x75, 0x6d, 0xe9, 0x65, 0x0d, 0x0a,                                                  //.fumée..
     };
-    L1U8Recode l1U8Recode = L1U8Recode("\r\nBEGIN\r\n", "\r\nEND\r\n");
+    L1U8Recode l1U8Recode = L1U8Recode("BEGIN\r\n", "\r\nEND");
     size_t outputLen = l1U8Recode.translate(input, sizeof(input), output);
     EXPECT_EQ(sizeof(expectedOutput), outputLen);
     EXPECT_EQ(0, memcmp(output, expectedOutput, outputLen));
