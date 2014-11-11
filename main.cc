@@ -17,18 +17,20 @@ int main(int argc, char *argv[]) {
     const char *    beginText = nullptr;
     const char *    endText = nullptr;
     FILE *          in = stdin;
+    FILE *          out = stdout;
     size_t          n;
 
     for (;;) {
         static struct option long_options[] = {
-                { "rcs", no_argument, nullptr, 'R'},
+                { "rcs-log", no_argument, nullptr, 'R'},
                 { "begin", required_argument, nullptr, 'b'},
                 { "end", required_argument, nullptr, 'e'},
                 { "in", required_argument, nullptr, 'i'},
+                { "out", required_argument, nullptr, 'o'},
                 { nullptr, 0, nullptr, 0 }
         };
         int option_index = 0;
-        int c = getopt_long(argc, argv, "Rb:e:i:", long_options, &option_index);
+        int c = getopt_long(argc, argv, "Rb:e:i:o:", long_options, &option_index);
         if (c < 0) {
             break;
         }
@@ -49,7 +51,15 @@ int main(int argc, char *argv[]) {
             case 'i':
                 in = fopen(optarg, "r");
                 if (in == nullptr) {
-                    fprintf(stderr, "Error on opening file '%s': %s\n", optarg, strerror(errno));
+                    fprintf(stderr, "Error on opening input file '%s': %s\n", optarg, strerror(errno));
+                    return EXIT_FAILURE;
+                }
+                break;
+
+            case 'o':
+                out = fopen(optarg, "w+");
+                if (out == nullptr) {
+                    fprintf(stderr, "Error on opening output file '%s': %s\n", optarg, strerror(errno));
                     return EXIT_FAILURE;
                 }
                 break;
@@ -65,13 +75,15 @@ int main(int argc, char *argv[]) {
         n = fread(input, 1, sizeof(input), in);
         n = l1U8Recode.translate(input, n, output);
         if (n > 0) {
-            fwrite(output, 1, n, stdout);
+            fwrite(output, 1, n, out);
         }
     }
     n = l1U8Recode.finish(output);
     if (n > 0) {
-        fwrite(output, 1, n, stdout);
+        fwrite(output, 1, n, out);
     }
+    fclose(in);
+    fclose(out);
 
     return EXIT_SUCCESS;
 }
