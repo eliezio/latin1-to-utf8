@@ -6,7 +6,7 @@ if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wall -Wextra -Werror -std=c++11")
 endif()
 
-add_executable(l1u8recode main.cc kmp.cc l1u8recode.cc)
+add_executable(l1u8recode main.cc KmpSearch.cc l1u8recode.cc)
 
 enable_testing()
 
@@ -19,10 +19,10 @@ set(GTEST_BOTH_LIBRARIES gtest gtest_main)
 
 include_directories(${GTEST_INCLUDE_DIRS})
 
-add_executable(kmp_tests kmp.cc kmp_tests.cc)
+add_executable(kmp_tests KmpSearch.cc kmp_tests.cc)
 target_link_libraries(kmp_tests ${GTEST_BOTH_LIBRARIES})
 add_test(KmpTests kmp_tests)
 
-add_executable(l1u8recode_tests kmp.cc l1u8recode.cc l1u8recode_tests.cc)
+add_executable(l1u8recode_tests KmpSearch.cc l1u8recode.cc l1u8recode_tests.cc)
 target_link_libraries(l1u8recode_tests ${GTEST_BOTH_LIBRARIES})
 add_test(L1U8RecodeTests l1u8recode_tests)

@@ -4,7 +4,7 @@
 #include <inttypes.h>
 #include <stdlib.h>
 
-#include "kmp.h"
+#include "KmpSearch.h"
 
 class L1U8Recode {
 public:

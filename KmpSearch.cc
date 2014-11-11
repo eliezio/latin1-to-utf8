@@ -20,7 +20,7 @@
     THE SOFTWARE.
 */
 
-#include "kmp.h"
+#include "KmpSearch.h"
 
 #include <string.h>
 
