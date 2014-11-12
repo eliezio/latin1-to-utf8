@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "kmp.h"
+#include "KmpSearch.h"
 
 TEST(KmpTest, WikiExample)
 {
