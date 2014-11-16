@@ -7,6 +7,6 @@ The conversion can be restricted to delimited portions of the input file.
 I wrote this utility because both [iconv](http://www.gnu.org/software/libiconv/) and [recode](http://recode.progiciels-bpi.ca/), the two most widely used recoders, are unable to:
 
 1. Properly handle mixed encoding files;
-2. Properly handle mixed binary and text files.
+2. Properly handle mixed binary and text contents.
 
 Theses cases are very common when converting CVS repositories to GIT.
