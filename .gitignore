@@ -8,3 +8,4 @@ cmake_install.cmake
 gtest/
 l1u8recode
 *_tests
+install_manifest.txt

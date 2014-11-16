@@ -10,6 +10,8 @@ endif()
 
 add_executable(l1u8recode main.cc KmpSearch.cc l1u8recode.cc)
 
+install(TARGETS l1u8recode RUNTIME DESTINATION bin)
+
 enable_testing()
 
 if(NOT DEFINED ENV{GTEST_ROOT})
