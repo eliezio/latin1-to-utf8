@@ -1,22 +1,24 @@
-#include <iostream>
-
-#include <cstring>
-#include <popt.h>
 
 #include "l1u8recode.h"
 #include "config.h"
 
-#define MAX_LINE_LENGTH     2000
+#include <memory>
+#include <cstring>
+#include <iostream>
+#include <fstream>
+
+#include <popt.h>
+#include <unistd.h>
 
 enum {
     CL_OPT_RCS_LOG = 1,
-    CL_OPT_INPUT,
-    CL_OPT_OUTPUT,
+    CL_OPT_VERSION,
 };
 
 static char *    beginText = nullptr;
 static char *    endText = nullptr;
-static char *    fileName = nullptr;
+static char *    inputFileName = nullptr;
+static char *    outputFileName = nullptr;
 static int       xargsMode = false;
 
 static const struct poptOption options[] = {
@@ -33,8 +35,8 @@ static const struct poptOption options[] = {
         "in",
         0,
         POPT_ARG_STRING,
-        &fileName,
-        CL_OPT_INPUT,
+        &inputFileName,
+        0,
         "Input file (default: stdin)",
         "FILENAME",
     },
@@ -42,8 +44,8 @@ static const struct poptOption options[] = {
         "out",
         0,
         POPT_ARG_STRING,
-        &fileName,
-        CL_OPT_OUTPUT,
+        &outputFileName,
+        0,
         "Output file (default: stdout)",
         "FILENAME",
     },
@@ -90,26 +92,34 @@ static const struct poptOption options[] = {
 static const char *RCS_LOG_BEGIN = "\nlog\n";
 static const char *RCS_LOG_END = "\n@\n";
 
-static inline bool strequal(const char *str1, const char *str2) {
-    if (!str1 && !str2) {
-        return true;
-    } else if (!str1 || !str2) {
-        return false;
-    } else {
-        return strcmp(str1, str2) == 0;
-    }
+static inline bool stringEquals(const char *str1, const char *str2);
+
+typedef void (*CustomDeleter)(void *);
+
+static std::unique_ptr<char[], CustomDeleter> realPathOf(const char *path) {
+    std::unique_ptr<char[], CustomDeleter> realPath(realpath(path, nullptr), free);
+
+    return realPath;
+}
+
+/**
+* The basic recode method, using standard I/O abstractions.
+*/
+static void recode(std::istream &in, std::ostream &out);
+
+/**
+* Perform a recoding
+*/
+static bool recode(const char *inputFileName, const char *outputFileName);
+
+static inline bool recode(std::string &inputFileName) {
+    return recode(inputFileName.c_str(), nullptr);
+
 }
 
 int main(int argc, char *argv[]) {
     poptContext     optCtx;
     int             c;
-    char *          inputFileName = nullptr;
-    char *          outputFileName = nullptr;
-    static uint8_t  input[MAX_LINE_LENGTH];
-    static uint8_t  output[2 * MAX_LINE_LENGTH];
-    FILE *          in;
-    FILE *          out;
-    size_t          n;
 
     optCtx = poptGetContext("l1u8recode", argc, (const char **) argv, options, 0);
     while ((c = poptGetNextOpt(optCtx)) > 0) {
@@ -128,15 +138,6 @@ int main(int argc, char *argv[]) {
                         << std::endl
                         << "Written by Eliezio Oliveira <ebo@pobox.com> " << std::endl;
                 return EXIT_SUCCESS;
-            case CL_OPT_INPUT:
-                free(inputFileName);
-                inputFileName = realpath(fileName, nullptr);
-                break;
-
-            case CL_OPT_OUTPUT:
-                free(outputFileName);
-                outputFileName = realpath(fileName, nullptr);
-                break;
 
             default:
                 break;
@@ -146,45 +147,99 @@ int main(int argc, char *argv[]) {
         std::cerr << poptBadOption(optCtx, POPT_BADOPTION_NOALIAS) << ": " << poptStrerror(c) << std::endl;
         return EXIT_FAILURE;
     }
-    if (inputFileName && outputFileName && strequal(inputFileName, outputFileName)) {
-        std::cerr << "Input and output cannot be the same" << std::endl;
-        return EXIT_FAILURE;
-    }
-    if (inputFileName) {
-        in = fopen(inputFileName, "r");
-        if (!in) {
-            std::cerr << "Error on opening input file '" << inputFileName << "': " << strerror(errno) << std::endl;
+    poptFreeContext(optCtx);
+    bool success = true;
+    if (xargsMode) {
+        if (inputFileName || outputFileName) {
+            std::cerr << "--xargs is mutually exclusive with --in/--out options" << std::endl;
             return EXIT_FAILURE;
         }
-        free(inputFileName);
+        std::string fileName;
+        while (std::getline(std::cin, fileName)) {
+            if (!fileName.empty()) {
+                success = success && recode(fileName);
+            }
+        }
     } else {
-        in = stdin;
-    }
-    if (outputFileName) {
-        out = fopen(outputFileName, "w+");
-        if (!out) {
-            std::cerr << "Error on opening output file '" << outputFileName << "': " << strerror(errno) << std::endl;
+        std::unique_ptr<char[], CustomDeleter> realInputPath = realPathOf(inputFileName);
+        std::unique_ptr<char[], CustomDeleter> realOutputPath = realPathOf(outputFileName);
+        if (realInputPath.get() && stringEquals(realInputPath.get(), realOutputPath.get())) {
+            std::cerr << "Input and output files cannot be the same" << std::endl;
             return EXIT_FAILURE;
         }
-        free(outputFileName);
-    } else {
-        out = stdout;
+        success = recode(inputFileName, outputFileName);
     }
-    L1U8Recode l1U8Recode = L1U8Recode(beginText, endText);
+    return success ? EXIT_SUCCESS : EXIT_FAILURE;
+}
 
-    while (! feof(in)) {
-        n = fread(input, 1, sizeof(input), in);
-        n = l1U8Recode.translate(input, n, output);
+#define CHUNK_SIZE     2000
+
+void recode(std::istream &in, std::ostream &out) {
+    uint8_t         input[CHUNK_SIZE];
+    uint8_t         output[2 * CHUNK_SIZE];
+    size_t          n;
+    L1U8Recode      l1U8Recode = L1U8Recode(beginText, endText);
+
+    while (!in.eof()) {
+        in.read((char *) input, sizeof(input));
+        n = l1U8Recode.translate(input, (size_t) in.gcount(), output);
         if (n > 0) {
-            fwrite(output, 1, n, out);
+            out.write((const char *) output, n);
         }
     }
     n = l1U8Recode.finish(output);
     if (n > 0) {
-        fwrite(output, 1, n, out);
+        out.write((const char *) output, n);
     }
-    fclose(in);
-    fclose(out);
+}
 
-    return EXIT_SUCCESS;
+bool recode(const char *inputFileName, const char *outputFileName) {
+    std::string tempOutputFileName;
+    bool        inPlaceRecoding = false;
+    std::istream *in = &std::cin;
+    std::ifstream ifs;
+    if (inputFileName) {
+        ifs.open(inputFileName, std::ifstream::binary);
+        if (ifs.fail()) {
+            std::cerr << "Error on opening input file '" << inputFileName << "': " << strerror(errno) << std::endl;
+            return false;
+        }
+        in = &ifs;
+        if (!outputFileName) {
+            inPlaceRecoding = true;
+            tempOutputFileName = inputFileName;
+            tempOutputFileName += "!recode";
+            outputFileName = tempOutputFileName.c_str();
+        }
+    }
+    std::ostream *out = &std::cout;
+    std::ofstream ofs;
+    if (outputFileName) {
+        ofs.open(outputFileName, std::ofstream::binary | std::ofstream::trunc);
+        if (ofs.fail()) {
+            std::cerr << "Error on opening output file '" << outputFileName << "': " << strerror(errno) << std::endl;
+            return false;
+        }
+        out = &ofs;
+    }
+    recode(*in, *out);
+    if (inPlaceRecoding) {
+        (void) unlink(inputFileName);
+        int rc = rename(outputFileName, inputFileName);
+        if (rc < 0) {
+            std::cerr << "Error on renaming '" << outputFileName << "' to '" << inputFileName << "': " << strerror(errno) << std::endl;
+            return false;
+        }
+    }
+    return true;
+}
+
+bool static inline stringEquals(const char *str1, const char *str2) {
+    if (!str1 && !str2) {
+        return true;
+    } else if (!str1 || !str2) {
+        return false;
+    } else {
+        return strcmp(str1, str2) == 0;
+    }
 }
