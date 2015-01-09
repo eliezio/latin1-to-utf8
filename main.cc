@@ -4,6 +4,7 @@
 #include <popt.h>
 
 #include "l1u8recode.h"
+#include "config.h"
 
 #define MAX_LINE_LENGTH     2000
 
@@ -19,6 +20,15 @@ static char *    fileName = nullptr;
 static int       xargsMode = false;
 
 static const struct poptOption options[] = {
+    {
+        "version",
+        0,
+        POPT_ARG_NONE,
+        NULL,
+        CL_OPT_VERSION,
+        "Show version",
+        NULL,
+    },
     {
         "in",
         0,
@@ -109,6 +119,15 @@ int main(int argc, char *argv[]) {
                 endText = (char *) RCS_LOG_END;
                 break;
 
+            case CL_OPT_VERSION:
+                std::cout << "l1u8recode version " << VERSION << std::endl
+                        << "Copyright (C) 2015 Eliezio Oliveira" << std::endl
+                        << std::endl
+                        << "This is free software; see the source for copying conditions.  There is NO" << std::endl
+                        << "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE." << std::endl
+                        << std::endl
+                        << "Written by Eliezio Oliveira <ebo@pobox.com> " << std::endl;
+                return EXIT_SUCCESS;
             case CL_OPT_INPUT:
                 free(inputFileName);
                 inputFileName = realpath(fileName, nullptr);

@@ -8,6 +8,12 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" STRE
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wall -Wextra -Werror -std=c++11")
 endif()
 
+include(version.cmake)
+set(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
+
+configure_file(config.h.in config.h)
+include_directories(${CMAKE_BINARY_DIR})
+
 find_package(PkgConfig REQUIRED)
 
 pkg_check_modules(POPT REQUIRED popt)
