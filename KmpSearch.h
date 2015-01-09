@@ -3,8 +3,8 @@
 
 #ifdef __cplusplus
 
-#include <stdlib.h>
-#include <inttypes.h>
+#include <cstdlib>
+#include <cstdint>
 
 class KmpSearch {
 public:

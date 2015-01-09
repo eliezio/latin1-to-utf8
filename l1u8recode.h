@@ -1,8 +1,8 @@
 #ifndef L1U8RECODE_H
 #define L1U8RECODE_H
 
-#include <inttypes.h>
-#include <stdlib.h>
+#include <cstdint>
+#include <cstdlib>
 
 #include "KmpSearch.h"
 

@@ -8,7 +8,14 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" STRE
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wall -Wextra -Werror -std=c++11")
 endif()
 
+find_package(PkgConfig REQUIRED)
+
+pkg_check_modules(POPT REQUIRED popt)
+include_directories(${POPT_INCLUDE_DIRS})
+link_directories(${POPT_LIBRARY_DIRS})
+
 add_executable(l1u8recode main.cc KmpSearch.cc l1u8recode.cc)
+target_link_libraries(l1u8recode popt)
 
 install(TARGETS l1u8recode RUNTIME DESTINATION bin)
 
