@@ -1,3 +1,4 @@
+.*.swp
 .idea/
 CMakeCache.txt*
 CMakeFiles/
@@ -9,3 +10,6 @@ gtest/
 l1u8recode
 *_tests
 install_manifest.txt
+Debug/
+Release/
+RelWithDebInfo/
