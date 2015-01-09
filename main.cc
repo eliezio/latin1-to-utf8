@@ -19,6 +19,7 @@ static char *    beginText = nullptr;
 static char *    endText = nullptr;
 static char *    inputFileName = nullptr;
 static char *    outputFileName = nullptr;
+static int       verbose = false;
 static int       xargsMode = false;
 
 static const struct poptOption options[] = {
@@ -29,6 +30,15 @@ static const struct poptOption options[] = {
         NULL,
         CL_OPT_VERSION,
         "Show version",
+        NULL,
+    },
+    {
+        "--verbose",
+        'v',
+        POPT_ARG_NONE,
+        &verbose,
+        0,
+        "Enable verbose mode",
         NULL,
     },
     {
@@ -105,7 +115,7 @@ static std::unique_ptr<char[], CustomDeleter> realPathOf(const char *path) {
 /**
 * The basic recode method, using standard I/O abstractions.
 */
-static void recode(std::istream &in, std::ostream &out);
+static size_t recode(std::istream &in, std::ostream &out);
 
 /**
 * Perform a recoding
@@ -114,7 +124,6 @@ static bool recode(const char *inputFileName, const char *outputFileName);
 
 static inline bool recode(std::string &inputFileName) {
     return recode(inputFileName.c_str(), nullptr);
-
 }
 
 int main(int argc, char *argv[]) {
@@ -174,7 +183,7 @@ int main(int argc, char *argv[]) {
 
 #define CHUNK_SIZE     2000
 
-void recode(std::istream &in, std::ostream &out) {
+size_t recode(std::istream &in, std::ostream &out) {
     uint8_t         input[CHUNK_SIZE];
     uint8_t         output[2 * CHUNK_SIZE];
     size_t          n;
@@ -191,12 +200,13 @@ void recode(std::istream &in, std::ostream &out) {
     if (n > 0) {
         out.write((const char *) output, n);
     }
+    return l1U8Recode.getChangesCount();
 }
 
 bool recode(const char *inputFileName, const char *outputFileName) {
     std::string tempOutputFileName;
     bool        inPlaceRecoding = false;
-    std::istream *in = &std::cin;
+    std::istream *in;
     std::ifstream ifs;
     if (inputFileName) {
         ifs.open(inputFileName, std::ifstream::binary);
@@ -211,8 +221,11 @@ bool recode(const char *inputFileName, const char *outputFileName) {
             tempOutputFileName += "!recode";
             outputFileName = tempOutputFileName.c_str();
         }
+    } else {
+        in = &std::cin;
     }
-    std::ostream *out = &std::cout;
+    std::ostream *log;
+    std::ostream *out;
     std::ofstream ofs;
     if (outputFileName) {
         ofs.open(outputFileName, std::ofstream::binary | std::ofstream::trunc);
@@ -221,8 +234,18 @@ bool recode(const char *inputFileName, const char *outputFileName) {
             return false;
         }
         out = &ofs;
+        log = &std::cout;
+    } else {
+        out = &std::cout;
+        log = &std::cerr;
     }
-    recode(*in, *out);
+    if (verbose && inputFileName) {
+        (*log) << "Recoding file '" << inputFileName << "'... ";
+    }
+    auto changesCount = recode(*in, *out);
+    if (verbose && inputFileName) {
+        (*log) << changesCount << " characters recoded." << std::endl;
+    }
     if (inPlaceRecoding) {
         (void) unlink(inputFileName);
         int rc = rename(outputFileName, inputFileName);

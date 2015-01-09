@@ -58,6 +58,7 @@ void L1U8Recode::init() {
         kmpSearches[true]->reset();
     }
     this->u8Esc = 0;
+    this->changesCount = 0;
 }
 
 size_t L1U8Recode::translate(const uint8_t *input, size_t inputLen, uint8_t *const output) {
@@ -76,18 +77,19 @@ size_t L1U8Recode::translate(const uint8_t *input, size_t inputLen, uint8_t *con
                 } else {
                     *out++ = ESC2;
                     *out++ = (uint8_t) (c ^ 0x40);
+                    ++changesCount;
                 }
             } else {
                 if (c < 0x80) {
                     *out++ = ESC2;
                     *out++ = (uint8_t) (u8Esc ^ 0x40);
+                    ++changesCount;
                     *out++ = c;
                 } else if (c < 0xc0) {
                     *out++ = u8Esc;
                     *out++ = c;
                 } else {
-                    uint8_t c1;
-                    uint8_t c2;
+                    uint8_t c1, c2;
                     // I found many of this weird case on my RCS files with no apparent cause
                     if ((u8Esc == ESC2) && (c == ESC2)) {
                         c1 = c_cedilla;
@@ -98,8 +100,10 @@ size_t L1U8Recode::translate(const uint8_t *input, size_t inputLen, uint8_t *con
                     }
                     *out++ = ESC2;
                     *out++ = (uint8_t) (c1 ^ 0x40);
+                    ++changesCount;
                     *out++ = ESC2;
                     *out++ = (uint8_t) (c2 ^ 0x40);
+                    ++changesCount;
                 }
                 u8Esc = 0;
             }

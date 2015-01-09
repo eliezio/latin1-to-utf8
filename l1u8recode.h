@@ -22,10 +22,15 @@ public:
 
     size_t finish(uint8_t *output);
 
+    size_t getChangesCount() const {
+        return changesCount;
+    }
+
 private:
     KmpSearch * kmpSearches[2];
     bool        inText;
     uint8_t     u8Esc;
+    size_t      changesCount;
 };
 
 #endif
