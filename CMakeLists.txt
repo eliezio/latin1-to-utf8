@@ -67,17 +67,17 @@ set(CPACK_GENERATOR "DEB")
 set(CPACK_PACKAGE_VERSION "${VERSION}")
 set(CPACK_PACKAGE_CONTACT "Eliezio Oliveira <ebo@pobox.com>")
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/eliezio/latin1-to-utf8")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A smart ISO-8859-1 to UTF-8 recoder")
-set(CPACK_PACKAGE_DESCRIPTION "A utility to recode files from ISO-8859-1 (latin1) to UTF8 that supports mixed encodings and/or formats.\n"
-  "It's able to handle these two special cases:\n"
-  "1. The recoding can be applyed to delimited portions of the input;\n"
-  "2. Preserves characters already converted to UTF-8.")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Smart recoding from ISO-8859-1 to UTF-8")
+set(CPACK_PACKAGE_DESCRIPTION
+  "Utility to recode files from ISO-8859-1 to UTF8 with two special capabilities:\n"
+  "1. The recoding can be restricted to delimited contents of the input;\n"
+  "2. It preserves characters already converted to UTF-8.")
 
 set(CPACK_STRIP_FILES TRUE)
 
 set(CPACK_DEBIAN_PACKAGE_SECTION "text")
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
-set(CPACK_DEBIAN_PACKAGE_BUILD_DEPENDS python-minimal cmake pkg-config libpopt-dev libgtest-dev)
+set(CPACK_DEBIAN_PACKAGE_BUILD_DEPENDS python-minimal gzip cmake pkg-config libpopt-dev libgtest-dev)
 set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${VERSION}_${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}")
 set(PPA_DEBIAN_VERSION "ppa1")
 

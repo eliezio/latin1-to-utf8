@@ -1,6 +1,7 @@
 ## -*- mode:cmake; coding:utf-8; -*-
 # Copyright (c) 2010 Daniel Pfeifer <daniel@pfeifer-mail.de>
 # Changes Copyright (c) 2011 2012 Rüdiger Sonderfeld <ruediger@c-plusplus.de>
+# Changes Copyright (c) 2015 Eliezio Oliveira <ebo@pobox.com>
 #
 # UploadPPA.cmake is free software. It comes without any warranty,
 # to the extent permitted by applicable law. You can redistribute it
