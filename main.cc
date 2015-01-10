@@ -193,12 +193,12 @@ size_t recode(std::istream &in, std::ostream &out) {
         in.read((char *) input, sizeof(input));
         n = l1U8Recode.translate(input, (size_t) in.gcount(), output);
         if (n > 0) {
-            out.write((const char *) output, n);
+            out.write((const char *) output, (long) n);
         }
     }
     n = l1U8Recode.finish(output);
     if (n > 0) {
-        out.write((const char *) output, n);
+        out.write((const char *) output, (long) n);
     }
     return l1U8Recode.getChangesCount();
 }

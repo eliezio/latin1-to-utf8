@@ -56,7 +56,7 @@ int kmp(const char *target, const char *pattern) {
     KmpSearch kmpSearch = KmpSearch((const uint8_t *) pattern, psize);
     for (int i = 0; i < (int) tsize; i++) {
         if (kmpSearch.match((uint8_t) target[i])) {
-            return (int) (i - psize + 1);
+            return (int) (i - (int) psize + 1);
         }
     }
     return -1;
