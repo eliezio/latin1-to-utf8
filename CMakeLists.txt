@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.4)
 project(l1u8recode)
 
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules)
+
 if ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -Wall -Wextra -Werror")
 endif()
@@ -8,8 +10,16 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" STRE
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wall -Wextra -Werror -std=c++11")
 endif()
 
-include(version.cmake)
-set(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
+find_package(Git)
+
+execute_process(
+  COMMAND "${GIT_EXECUTABLE}" describe --tags --dirty --always
+  WORKING_DIRECTORY "${vobsub2srt_SOURCE_DIR}"
+  OUTPUT_VARIABLE VERSION
+  RESULT_VARIABLE EXECUTE_GIT
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+  ERROR_QUIET)
+string(REGEX REPLACE "^v" "" VERSION "${VERSION}")
 
 configure_file(config.h.in config.h)
 include_directories(${CMAKE_BINARY_DIR})
@@ -44,29 +54,36 @@ add_executable(all_tests KmpSearch.cc kmp_tests.cc l1u8recode.cc l1u8recode_test
 target_link_libraries(all_tests ${GTEST_BOTH_LIBRARIES})
 add_test(AllTests all_tests)
 
-set(CPACK_GENERATOR "DEB")
-set(CPACK_PACKAGE_VENDOR  "Eliezio Oliveira <ebo@pobox.com>")
-set(CPACK_PACKAGE_CONTACT "Eliezio Oliveira <ebo@pobox.com>")
-set(CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
-set(CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
-set(CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
-set(CPACK_RPM_PACKAGE_RELEASE ${PACKAGE_RELEASE})
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A smart ISO-8859-1 to UTF-8 recoder")
-set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/eliezio/latin1-to-utf8")
-set(CPACK_DEBIAN_PACKAGE_SECTION "text")
-set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 # CPACK_DEBIAN_PACKAGE_ARCHITECTURE should get set automatically by dpkg --print-architecture
 # ... except that doesn't happen until CPack runs, and we need it here to set the package filename
 # This is copied from CPackDeb.cmake.
-find_program(DPKG_CMD dpkg)
-if(DPKG_CMD)
-  execute_process(COMMAND "${DPKG_CMD}" --print-architecture
-    OUTPUT_VARIABLE CPACK_DEBIAN_PACKAGE_ARCHITECTURE
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-else()
-  message(STATUS "Can not find dpkg in your path, default to i386.")
-  set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE i386)
-endif()
-set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${VERSION}-${PACKAGE_RELEASE}_${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}")
+execute_process(COMMAND /usr/bin/dpkg --print-architecture
+  OUTPUT_VARIABLE CPACK_DEBIAN_PACKAGE_ARCHITECTURE
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+set(CPACK_GENERATOR "DEB")
+set(CPACK_PACKAGE_VERSION "${VERSION}")
+set(CPACK_PACKAGE_CONTACT "Eliezio Oliveira <ebo@pobox.com>")
+set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/eliezio/latin1-to-utf8")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A smart ISO-8859-1 to UTF-8 recoder")
+set(CPACK_PACKAGE_DESCRIPTION "A utility to recode files from ISO-8859-1 (latin1) to UTF8 that supports mixed encodings and/or formats.\n"
+  "It's able to handle these two special cases:\n"
+  "1. The recoding can be applyed to delimited portions of the input;\n"
+  "2. Preserves characters already converted to UTF-8.")
+
+set(CPACK_STRIP_FILES TRUE)
+
+set(CPACK_DEBIAN_PACKAGE_SECTION "text")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libpopt0 >= 1.14")
+set(CPACK_DEBIAN_PACKAGE_BUILD_DEPENDS cmake pkg-config libpopt-dev)
+set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${VERSION}_${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}")
+set(PPA_DEBIAN_VERSION "ppa1")
+
+include(ppa_config.cmake OPTIONAL)
+set(DPUT_HOST "ppa:ebo/cvs2git")
+
 include(CPack)
+
+set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "any") # can be build on any system
+include(UploadPPA)

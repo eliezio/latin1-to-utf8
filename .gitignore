@@ -1,15 +1,6 @@
 .*.swp
 .idea/
-CMakeCache.txt*
-CMakeFiles/
-CTest*.cmake
-Makefile
-Testing/
-cmake_install.cmake
-gtest/
-l1u8recode
-*_tests
-install_manifest.txt
 Debug/
 Release/
 RelWithDebInfo/
+MinSizeRel/
