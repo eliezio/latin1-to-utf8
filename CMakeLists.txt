@@ -10,6 +10,14 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" STRE
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wall -Wextra -Werror -std=c++11")
 endif()
 
+set(CPACK_SET_DESTDIR ON)
+
+set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "l1u8recode install prefix" FORCE)
+set(INSTALL_DATA_DIR_BASE "${CMAKE_INSTALL_PREFIX}/share" CACHE STRING "Custom data installation directory without suffixes")
+set(INSTALL_MAN_DIR "${INSTALL_DATA_DIR_BASE}/man/man1" CACHE STRING "Custom manpage installation directory without suffixes")
+
+add_subdirectory(doc)
+
 find_package(Git)
 
 execute_process(
@@ -32,10 +40,6 @@ link_directories(${POPT_LIBRARY_DIRS})
 
 add_executable(l1u8recode main.cc KmpSearch.cc l1u8recode.cc)
 target_link_libraries(l1u8recode popt)
-
-set(CPACK_SET_DESTDIR ON)
-
-set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "l1u8recode install prefix" FORCE)
 
 install(TARGETS l1u8recode RUNTIME DESTINATION bin)
 

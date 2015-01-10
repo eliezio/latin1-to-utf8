@@ -1,0 +1,43 @@
+.TH l1u8recode 1 "10 January 2015"
+.SH NAME
+l1u8recode \- a smart utility to recode files from ISO-8859-1 (latin1) to UTF8
+.SH SYNOPSIS
+\fBl1u8recode\fR [\fIOPTIONS\fR]
+.SH DESCRIPTION
+.PP
+l1u8recode supports mixed encodings and/or formats. It's able to handle these two special cases:
+
+1. The recoding can be applied to delimited portions of the input. Useful for files that contains both text and binary data, such as RCS files;
+
+2. Preserves characters already converted to UTF-8. Handy when you have texts with mixed encodings. Editing a file on different platforms can led it to this state.
+.SH OPTIONS
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+Print a status message and a summary for each file recoded.
+.TP
+\fB\-\-in\fR \fIFILENAME\fR
+Input file (default: stdin).
+.TP
+\fB\-\-out\fR \fIFILENAME\fR
+Output file. If ommited but input file was provided, the modification will occur in\-place.
+.TP
+\fB\-\-xargs\fR
+Read input file names from stdin and recode them in\-place.
+.TP
+\fB\-\-begin\fR \fIPATTERN\fR
+Recode only sections beginning with PATTERN. Used in conjunction with \-\-end.
+.TP
+\fB\-\-end\fR
+Recode only sections ending with PATTERN. Used in conjunction with \-\-begin.
+.TP
+\fB\-\-rcs\-log\fR
+Recode only log messages in a RCS formatted file.
+.SH EXAMPLES
+.nf
+  $ find /var/cvsroot/project -name \\*,v | \fBl1u8recode\fR \-\-xargs \-v
+.fi
+Recodes all RCS files found in a CVS repository.
+.SH HOMEPAGE
+For more information see \fIhttps://github.com/eliezio/latin1-to-utf8\fR
+.SH AUTHOR
+Eliezio Oliveira <\fIebo -AT- pobox -DOT- com\fR>
