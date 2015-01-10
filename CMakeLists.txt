@@ -3,17 +3,11 @@ project(l1u8recode)
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules)
 
-if ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -Wall -Wextra -Werror")
-endif()
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -Wall -Wextra -Werror -std=c++11")
-endif()
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -std=c++11")
 
-set(CPACK_SET_DESTDIR ON)
 
-set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "l1u8recode install prefix" FORCE)
-set(INSTALL_DATA_DIR_BASE "${CMAKE_INSTALL_PREFIX}/share" CACHE STRING "Custom data installation directory without suffixes")
+set(INSTALL_DATA_DIR_BASE "share" CACHE STRING "Custom data installation directory without suffixes")
 set(INSTALL_DOC_DIR_BASE "${INSTALL_DATA_DIR_BASE}/doc" CACHE STRING "Custom doc installation directory without suffixes")
 set(INSTALL_DOC_DIR "${INSTALL_DOC_DIR_BASE}/${CMAKE_PROJECT_NAME}" CACHE STRING "Custom doc installation directory")
 set(INSTALL_MAN_DIR "${INSTALL_DATA_DIR_BASE}/man/man1" CACHE STRING "Custom manpage installation directory without suffixes")
@@ -82,7 +76,7 @@ set(CPACK_PACKAGE_DESCRIPTION "A utility to recode files from ISO-8859-1 (latin1
 set(CPACK_STRIP_FILES TRUE)
 
 set(CPACK_DEBIAN_PACKAGE_SECTION "text")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libpopt0 >= 1.14")
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 set(CPACK_DEBIAN_PACKAGE_BUILD_DEPENDS python-minimal cmake pkg-config libpopt-dev libgtest-dev)
 set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${VERSION}_${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}")
 set(PPA_DEBIAN_VERSION "ppa1")
