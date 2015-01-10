@@ -41,11 +41,9 @@ install(TARGETS l1u8recode RUNTIME DESTINATION bin)
 
 enable_testing()
 
-if(NOT DEFINED ENV{GTEST_ROOT})
-    message(FATAL_ERROR "GTEST_ROOT is not defined. You must tell CMake where to find the gtest source")
-endif()
-add_subdirectory($ENV{GTEST_ROOT} gtest)
-set(GTEST_INCLUDE_DIRS $ENV{GTEST_ROOT}/include $ENV{GTEST_ROOT})
+set(GTEST_ROOT "/usr/src/gtest")
+add_subdirectory(${GTEST_ROOT} gtest)
+set(GTEST_INCLUDE_DIRS ${GTEST_ROOT}/src)
 set(GTEST_BOTH_LIBRARIES gtest gtest_main)
 
 include_directories(${GTEST_INCLUDE_DIRS})
@@ -76,7 +74,7 @@ set(CPACK_STRIP_FILES TRUE)
 
 set(CPACK_DEBIAN_PACKAGE_SECTION "text")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "libpopt0 >= 1.14")
-set(CPACK_DEBIAN_PACKAGE_BUILD_DEPENDS cmake pkg-config libpopt-dev)
+set(CPACK_DEBIAN_PACKAGE_BUILD_DEPENDS cmake pkg-config libpopt-dev libgtest-dev)
 set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${VERSION}_${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}")
 set(PPA_DEBIAN_VERSION "ppa1")
 
