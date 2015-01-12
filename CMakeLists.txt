@@ -40,13 +40,16 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -std=c++11")
 find_package(Git)
 
 execute_process(
-  COMMAND "${GIT_EXECUTABLE}" describe --tags --always
+  COMMAND "${GIT_EXECUTABLE}" describe --tags --always --abbrev=5
   WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
   OUTPUT_VARIABLE VERSION
   RESULT_VARIABLE EXECUTE_GIT
   OUTPUT_STRIP_TRAILING_WHITESPACE
   ERROR_QUIET)
 string(REGEX REPLACE "^v" "" VERSION "${VERSION}")
+string(LENGTH "${VERSION}" VERSION_LEN)
+math(EXPR VERSION_LEN "${VERSION_LEN} - 7")
+string(SUBSTRING "${VERSION}" 0 ${VERSION_LEN} VERSION)
 
 configure_file(config.h.in config.h)
 include_directories(${CMAKE_BINARY_DIR})
@@ -91,8 +94,7 @@ execute_process(
 include(ppa_config.cmake REQUIRED)
 
 set(CPACK_GENERATOR "DEB")
-set(CPACK_PACKAGE_VERSION "${VERSION}")
-set(DEBIAN_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}~${PPA_DEBIAN_VERSION}~${DISTRIBUTION_CODENAME}")
+set(CPACK_PACKAGE_VERSION "${VERSION}${PPA_DEBIAN_VERSION}~${DISTRIBUTION_CODENAME}")
 set(CPACK_PACKAGE_CONTACT "Eliezio Oliveira <ebo@pobox.com>")
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/eliezio/latin1-to-utf8")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Smart recoding from ISO-8859-1 to UTF-8")
