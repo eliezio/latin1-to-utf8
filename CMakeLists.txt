@@ -3,16 +3,39 @@ project(l1u8recode)
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -std=c++11")
+if(NOT CMAKE_BUILD_TYPE)
+    set(
+        CMAKE_BUILD_TYPE
+        Debug
+        CACHE
+        STRING
+        "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel."
+        FORCE)
+endif()
 
+message(STATUS "Source: ${CMAKE_SOURCE_DIR}")
+message(STATUS "Binary: ${CMAKE_BINARY_DIR}")
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+
+if(${CMAKE_BINARY_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
+    message(FATAL_ERROR "In-source builds are not permitted. Make a separate folder for building:\n"
+    "mkdir build; cd build; cmake ..\n"
+    "Before that, remove the files that cmake just created:\n"
+    "rm -rf CMakeCache.txt CMakeFiles")
+endif()
 
 set(INSTALL_DATA_DIR_BASE "share" CACHE STRING "Custom data installation directory without suffixes")
 set(INSTALL_DOC_DIR_BASE "${INSTALL_DATA_DIR_BASE}/doc" CACHE STRING "Custom doc installation directory without suffixes")
 set(INSTALL_DOC_DIR "${INSTALL_DOC_DIR_BASE}/${CMAKE_PROJECT_NAME}" CACHE STRING "Custom doc installation directory")
 set(INSTALL_MAN_DIR "${INSTALL_DATA_DIR_BASE}/man/man1" CACHE STRING "Custom manpage installation directory without suffixes")
 
+install(FILES "${CMAKE_SOURCE_DIR}/LICENSE" DESTINATION ${INSTALL_DOC_DIR} RENAME copyright)
+install(FILES "${CMAKE_SOURCE_DIR}/README.org" DESTINATION ${INSTALL_DOC_DIR} RENAME README)
+
 add_subdirectory(doc)
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -std=c++11")
 
 find_package(Git)
 
@@ -38,9 +61,6 @@ add_executable(l1u8recode main.cc KmpSearch.cc l1u8recode.cc)
 target_link_libraries(l1u8recode popt)
 
 install(TARGETS l1u8recode RUNTIME DESTINATION bin)
-
-install(FILES "${CMAKE_SOURCE_DIR}/LICENSE" DESTINATION ${INSTALL_DOC_DIR} RENAME copyright)
-install(FILES "${CMAKE_SOURCE_DIR}/README.org" DESTINATION ${INSTALL_DOC_DIR} RENAME README)
 
 enable_testing()
 
@@ -79,14 +99,8 @@ set(CPACK_DEBIAN_PACKAGE_SECTION "text")
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 set(CPACK_DEBIAN_PACKAGE_BUILD_DEPENDS python-minimal gzip cmake pkg-config libpopt-dev libgtest-dev)
 set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${VERSION}_${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}")
-execute_process(
-  COMMAND /usr/bin/lsb_release -sc
-  OUTPUT_VARIABLE DISTRIBUTION_CODENAME
-  OUTPUT_STRIP_TRAILING_WHITESPACE)
-set(PPA_DEBIAN_VERSION "ppa1~${DISTRIBUTION_CODENAME}")
 
-include(ppa_config.cmake OPTIONAL)
-set(DPUT_HOST "ppa:ebo/cvs2git")
+include(ppa_config.cmake REQUIRED)
 
 include(CPack)
 

@@ -42,8 +42,8 @@
 # ./configure -DENABLE_PPA=On
 # make dput
 # cd build/Debian
-# dpkg-source -x vobsub2srt_1.0pre4-ppa1.dsc
-# cd vobsub2srt-1.0pre4/
+# dpkg-source -x <project>_<version>-ppa1.dsc
+# cd <project>-<version>/
 # debuild -i -us -uc -sa -b
 #
 # Check the lintian warnings!
@@ -97,7 +97,14 @@ else()
   string(REPLACE "\n" "\n " deb_long_description " ${CPACK_PACKAGE_DESCRIPTION}")
 endif()
 
+execute_process(
+  COMMAND /usr/bin/lsb_release -sc
+  OUTPUT_VARIABLE DISTRIBUTION_CODENAME
+  OUTPUT_STRIP_TRAILING_WHITESPACE)
+
 if(PPA_DEBIAN_VERSION)
+  # Using suffix ~ppaN~<codename> still causing "debuild -S" errors!
+  set(DEBIAN_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}~${PPA_DEBIAN_VERSION}~${DISTRIBUTION_CODENAME}")
   set(DEBIAN_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-${PPA_DEBIAN_VERSION}")
 else()
   message(WARNING "Variable PPA_DEBIAN_VERSION not set! Building 'native' package!")
@@ -121,7 +128,7 @@ file(WRITE ${debian_control}
   "Priority: ${CPACK_DEBIAN_PACKAGE_PRIORITY}\n"
   "Maintainer: ${CPACK_DEBIAN_PACKAGE_MAINTAINER}\n"
   "Build-Depends: ${build_depends}\n"
-  "Standards-Version: 3.9.3\n"
+  "Standards-Version: 3.9.5\n"
   "Homepage: ${CPACK_DEBIAN_PACKAGE_HOMEPAGE}\n"
   "\n"
   "Package: ${CPACK_DEBIAN_PACKAGE_NAME}\n"
@@ -273,12 +280,8 @@ if(EXISTS ${CPACK_DEBIAN_RESOURCE_FILE_CHANGELOG})
       COMMAND date -R
       OUTPUT_VARIABLE DATE_TIME
       OUTPUT_STRIP_TRAILING_WHITESPACE)
-    execute_process(
-      COMMAND lsb_release -cs
-      OUTPUT_VARIABLE DISTRI
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
     file(WRITE ${debian_changelog}
-      "${CPACK_DEBIAN_PACKAGE_NAME} (${DEBIAN_PACKAGE_VERSION}) ${DISTRI}; urgency=low\n\n"
+      "${CPACK_DEBIAN_PACKAGE_NAME} (${DEBIAN_PACKAGE_VERSION}) ${DISTRIBUTION_CODENAME}; urgency=low\n\n"
       "  * Package created with CMake\n\n"
       " -- ${CPACK_DEBIAN_PACKAGE_MAINTAINER}  ${DATE_TIME}\n\n"
       )
@@ -290,12 +293,8 @@ else()
     COMMAND date -R
     OUTPUT_VARIABLE DATE_TIME
     OUTPUT_STRIP_TRAILING_WHITESPACE)
-  execute_process(
-    COMMAND lsb_release -cs
-    OUTPUT_VARIABLE DISTRI
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
   file(WRITE ${debian_changelog}
-    "${CPACK_DEBIAN_PACKAGE_NAME} (${DEBIAN_PACKAGE_VERSION}) ${DISTRI}; urgency=low\n\n"
+    "${CPACK_DEBIAN_PACKAGE_NAME} (${DEBIAN_PACKAGE_VERSION}) ${DISTRIBUTION_CODENAME}; urgency=low\n\n"
     "  * Package built with CMake\n\n"
     " -- ${CPACK_DEBIAN_PACKAGE_MAINTAINER}  ${DATE_TIME}\n"
     )
@@ -320,6 +319,7 @@ set(CPACK_SOURCE_IGNORE_FILES
   ".gitignore"
   ".dput.cf"
   "/gtest/"
+  "/tests/"
   "/packaging/"
   "*.*.swp"
   "*~")
