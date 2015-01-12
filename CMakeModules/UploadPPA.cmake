@@ -97,19 +97,6 @@ else()
   string(REPLACE "\n" "\n " deb_long_description " ${CPACK_PACKAGE_DESCRIPTION}")
 endif()
 
-execute_process(
-  COMMAND /usr/bin/lsb_release -sc
-  OUTPUT_VARIABLE DISTRIBUTION_CODENAME
-  OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-if(PPA_DEBIAN_VERSION)
-  # Using suffix ~ppaN~<codename> still causing "debuild -S" errors!
-  set(DEBIAN_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}~${PPA_DEBIAN_VERSION}~${DISTRIBUTION_CODENAME}")
-  set(DEBIAN_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}-${PPA_DEBIAN_VERSION}")
-else()
-  message(WARNING "Variable PPA_DEBIAN_VERSION not set! Building 'native' package!")
-  set(DEBIAN_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}")
-endif()
 message(STATUS "Debian version: ${DEBIAN_PACKAGE_VERSION}")
 
 set(DEBIAN_SOURCE_DIR ${CMAKE_BINARY_DIR}/Debian/${CPACK_DEBIAN_PACKAGE_NAME}_${DEBIAN_PACKAGE_VERSION})
@@ -270,6 +257,13 @@ if(NOT CPACK_DEBIAN_RESOURCE_FILE_CHANGELOG)
 endif()
 
 # TODO add support for git dch (git-buildpackage)
+
+if(NOT DISTRIBUTION_CODENAME)
+  execute_process(
+    COMMAND /usr/bin/lsb_release -sc
+    OUTPUT_VARIABLE DISTRIBUTION_CODENAME
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+endif()
 
 if(EXISTS ${CPACK_DEBIAN_RESOURCE_FILE_CHANGELOG})
   configure_file(${CPACK_DEBIAN_RESOURCE_FILE_CHANGELOG} ${debian_changelog} COPYONLY)

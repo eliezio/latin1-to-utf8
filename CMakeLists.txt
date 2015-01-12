@@ -40,7 +40,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -std=c++11")
 find_package(Git)
 
 execute_process(
-  COMMAND "${GIT_EXECUTABLE}" describe --tags --dirty --always
+  COMMAND "${GIT_EXECUTABLE}" describe --tags --always
   WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
   OUTPUT_VARIABLE VERSION
   RESULT_VARIABLE EXECUTE_GIT
@@ -83,8 +83,16 @@ execute_process(COMMAND /usr/bin/dpkg --print-architecture
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
+execute_process(
+  COMMAND /usr/bin/lsb_release -sc
+  OUTPUT_VARIABLE DISTRIBUTION_CODENAME
+  OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+include(ppa_config.cmake REQUIRED)
+
 set(CPACK_GENERATOR "DEB")
 set(CPACK_PACKAGE_VERSION "${VERSION}")
+set(DEBIAN_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION}~${PPA_DEBIAN_VERSION}~${DISTRIBUTION_CODENAME}")
 set(CPACK_PACKAGE_CONTACT "Eliezio Oliveira <ebo@pobox.com>")
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/eliezio/latin1-to-utf8")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Smart recoding from ISO-8859-1 to UTF-8")
@@ -98,9 +106,7 @@ set(CPACK_STRIP_FILES TRUE)
 set(CPACK_DEBIAN_PACKAGE_SECTION "text")
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 set(CPACK_DEBIAN_PACKAGE_BUILD_DEPENDS python-minimal gzip cmake pkg-config libpopt-dev libgtest-dev)
-set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${VERSION}_${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}")
-
-include(ppa_config.cmake REQUIRED)
+set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}_${DEBIAN_PACKAGE_VERSION}_${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}")
 
 include(CPack)
 
